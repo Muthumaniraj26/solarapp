@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>☀️ Solar & Weather Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+    h1 { color: #333; text-align: center; }
+    .status-box { background: white; padding: 20px; border-radius: 8px; max-width: 600px; margin: auto; }
+  </style>
+</head>
+<body>
+  <h1>☀️ Solar & Weather Dashboard</h1>
+  <div class="status-box">
+    <p id="location">Loading location...</p>
+    <p id="current">Loading weather...</p>
+    <p id="error" style="color:red;"></p>
+  </div>
+
+  <script>
+    fetch("/api/weather")
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById("error").innerText = "Error: " + data.error;
+        } else {
+          document.getElementById("location").innerText =
+            "Location: " + data.location + " (accuracy ~" + Math.round(data.accuracy_m) + "m)";
+          if (data.current) {
+            document.getElementById("current").innerText =
+              "Temperature: " + data.current.temperature + "°C, Windspeed: " + data.current.windspeed + " km/h";
+          }
+        }
+      })
+      .catch(err => {
+        document.getElementById("error").innerText = err.toString();
+      });
+  </script>
+</body>
+</html>

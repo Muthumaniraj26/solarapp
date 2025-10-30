@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Solar Power Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <meta name="theme-color" content="#073B4C"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <style>
+        :root {
+            --primary: #FFD166; 
+            --secondary: #06D6A0; 
+            --accent: #118AB2; 
+            --dark: #073B4C;
+            --darker: #052a36; 
+            --light: #F8F9FA; 
+            --danger: #EF476F;
+            --background-gradient: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            --card-bg: rgba(7, 59, 76, 0.7);
+            --text-color: var(--light);
+            --text-muted: rgba(248, 249, 250, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --nav-height: 70px;
+        }
+        
+        body.theme-sunny {
+            --primary: #f59e0b; 
+            --secondary: #3b82f6; 
+            --dark: #0f172a;
+            --darker: #1e293b; 
+            --light: #f1f5f9;
+            --background-gradient: linear-gradient(135deg, #7dd3fc 0%, #0ea5e9 100%);
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text-color: #0f172a;
+            --text-muted: #475569;
+            --border-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        body.theme-rainy {
+            --primary: #a5b4fc; 
+            --secondary: #7dd3fc; 
+            --dark: #1e293b;
+            --darker: #0f172a; 
+            --light: #e0e7ff;
+            --background-gradient: linear-gradient(135deg, #374151 0%, #111827 100%);
+            --card-bg: rgba(55, 65, 81, 0.7);
+            --text-color: #e5e7eb;
+            --text-muted: #9ca3af;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        body.theme-cloudy {
+            --primary: #94a3b8; 
+            --secondary: #64748b; 
+            --dark: #1e293b;
+            --darker: #334155; 
+            --light: #f1f5f9;
+            --background-gradient: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --text-color: #1e293b;
+            --text-muted: #4b5563;
+            --border-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        body.theme-stormy {
+            --primary: #facc15; 
+            --secondary: #9333ea; 
+            --dark: #1e1b4b;
+            --darker: #0c0a1d; 
+            --light: #e0e7ff;
+            --background-gradient: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            --card-bg: rgba(30, 27, 75, 0.7);
+            --text-color: #e0e7ff;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.theme-default {
+            --primary: #FFD166; 
+            --secondary: #06D6A0; 
+            --accent: #118AB2; 
+            --dark: #073B4C;
+            --darker: #052a36; 
+            --light: #F8F9FA; 
+            --danger: #EF476F;
+            --background-gradient: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            --card-bg: rgba(7, 59, 76, 0.7);
+            --text-color: var(--light);
+            --text-muted: rgba(248, 249, 250, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: var(--background-gradient); 
+            color: var(--text-color); 
+            min-height: 100vh; 
+            transition: background 0.5s ease; 
+            padding-bottom: var(--nav-height);
+        }
+        
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        .page-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+            padding-top: 15px;
+        }
+        .page-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--nav-height);
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 10px;
+            z-index: 1000;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+        }
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            width: 60px;
+            position: relative;
+        }
+        .nav-btn .fas {
+            font-size: 1.25rem;
+            margin-bottom: 4px;
+        }
+        .nav-btn.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .nav-badge {
+            position: absolute;
+            top: -2px;
+            right: 12px;
+            width: 10px;
+            height: 10px;
+            background-color: var(--danger);
+            border-radius: 50%;
+            border: 2px solid var(--dark);
+            box-shadow: 0 0 5px var(--danger);
+        }
+
+        .placeholder-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 40vh;
+            text-align: center;
+            padding: 20px;
+        }
+        .placeholder-card .fas {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+        .placeholder-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        .placeholder-card p {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+        #analysis-placeholder {
+            display: flex;
+        }
+
+         .live-info { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 10px; 
+            margin-bottom: 20px; 
+        }
+        @media (min-width: 480px) { .live-info { grid-template-columns: repeat(4, 1fr); } }
+        .live-item { background: var(--card-bg); padding: 10px 15px; border-radius: 10px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); font-size: 0.85rem; }
+        .live-icon { font-size: 1rem; color: var(--primary); } 
+        header { 
+            text-align: center; 
+            margin-bottom: 25px; 
+            padding: 15px; 
+            position: relative;
+        }
+        .logo { font-size: 36px; margin-bottom: 10px; color: var(--primary); text-shadow: 0 0 15px rgba(255, 209, 102, 0.5); }
+        h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 10px; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { font-size: 0.9rem; color: var(--text-muted); max-width: 600px; margin: 0 auto; line-height: 1.4; }
+        .search-toggle { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
+        .toggle-btn { padding: 8px 15px; border: 1px solid var(--accent); color: var(--accent); background: transparent; border-radius: 20px; cursor: pointer; transition: all 0.3s ease; font-size: 0.85rem; }
+        .toggle-btn.active { background: var(--accent); color: var(--darker); }
+        #city-form { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 25px; }
+        @media (min-width: 768px) { #city-form { grid-template-columns: 2fr 1fr auto; align-items: end; } }
+        .input-group { display: flex; flex-direction: column; text-align: left; }
+        
+        .styled-input, .styled-select {
+            padding: 12px 15px; 
+            border: none; 
+            border-radius: 50px; 
+            background: rgba(255, 255, 255, 0.1); 
+            color: var(--text-color); 
+            font-size: 16px; 
+            backdrop-filter: blur(10px); 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            font-family: 'Poppins', sans-serif;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .input-group label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; padding-left: 10px; }
+        #city-form button { padding: 12px 20px; border: none; border-radius: 50px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: var(--darker); font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        #city-form button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); }
+        .hidden { display: none !important; } 
+        .dashboard { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 25px; } 
+        @media (min-width: 900px) { .dashboard { grid-template-columns: 1fr 1fr; } }
+        
+        .long-term-container { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 20px; 
+            margin-top: 20px; 
+        }
+        @media (min-width: 900px) { 
+            .long-term-container { 
+                grid-template-columns: 1fr 1fr; 
+            } 
+        }
+        
+        .long-term-container .yearly-stats-card {
+            grid-column: 1 / -1; 
+        }
+
+        .card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border: 1px solid var(--border-color); }
+        .card-header { display: flex; align-items: center; margin-bottom: 15px; } 
+        .card-icon { font-size: 20px; margin-right: 10px; color: var(--primary); } 
+        .card-title { font-size: 1.2rem; font-weight: 600; }
+        .total-kwh { font-size: 2.5rem; font-weight: 700; text-align: center; margin: 15px 0; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        @media (min-width: 480px) { .total-kwh { font-size: 3.5rem; } }
+        .kwh-label { text-align: center; font-size: 1rem; opacity: 0.8; margin-bottom: 10px; } 
+        .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px; }
+        @media (min-width: 480px) { .stats { grid-template-columns: repeat(4, 1fr); } }
+        
+        .stat-item { 
+            text-align: center; 
+            padding: 12px; 
+            background: rgba(255, 255, 255, 0.05); 
+            border-radius: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 110px; 
+        } 
+        
+        .stat-value { 
+            font-size: 1.5rem; 
+            font-weight: 700; 
+            color: var(--primary); 
+            word-wrap: break-word; 
+            text-align: center;
+            word-break: break-word; /* NEW: Allow long words to break */
+        }
+        
+        .stat-label-secondary {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-align: center;
+            word-break: break-word; /* NEW: Allow long words to break */
+        }
+
+        @media (min-width: 480px) { 
+            .stat-value {
+                font-size: 1.7rem; 
+            }
+        } 
+        
+        .stat-label { 
+            font-size: 0.8rem; 
+            opacity: 0.8; 
+            margin-top: 5px; 
+            text-align: center;
+        } 
+        
+        .chart-container { position: relative; height: 250px; margin-top: 15px; }
+        @media (min-width: 768px) { .chart-container { height: 300px; } }
+        #loader { display: flex; justify-content: center; align-items: center; flex-direction: column; margin: 30px 0; } 
+        .spinner { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.1); border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
+        .loading-text { font-size: 1rem; opacity: 0.8; }
+        #error-message { background: rgba(239, 71, 111, 0.2); border-left: 4px solid var(--danger); padding: 12px 15px; border-radius: 8px; margin: 15px 0; display: flex; align-items: center; }
+        .error-icon { font-size: 20px; margin-right: 10px; color: var(--danger); } 
+        .fade-in { animation: fadeInUp 0.5s ease forwards; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } 
+        .current-weather { display: flex; flex-direction: column; align-items: center; margin-top: 15px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; gap: 15px; }
+        @media (min-width: 768px) { .current-weather { flex-direction: row; justify-content: space-between; } }
+        .weather-main { display: flex; align-items: center; gap: 15px; } 
+        .weather-temp { font-size: 2rem; font-weight: 700; color: var(--primary); }
+        @media (min-width: 480px) { .weather-temp { font-size: 2.5rem; } }
+        .weather-desc { font-size: 1rem; opacity: 0.9; } 
+        .weather-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .weather-detail-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; } 
+        .weather-detail-value { font-weight: 600; } 
+        input, button { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        @media screen and (max-width: 768px) { input, select, textarea { font-size: 16px !important; } }
+
+        #history-list-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .history-item-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            gap: 15px;
+        }
+        .history-item-info { flex-grow: 1; }
+        .history-item-card h3 { font-size: 1.25rem; font-weight: 600; color: var(--text-color); margin-bottom: 5px; }
+        .history-item-card p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 2px; }
+        .history-item-kwh { font-size: 1.75rem; font-weight: 700; color: var(--primary); text-align: right; }
+        .history-item-kwh span { font-size: 0.9rem; font-weight: 500; color: var(--text-muted); }
+        .clear-history-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(239, 71, 111, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .clear-history-btn:hover { background: var(--danger); color: var(--darker); }
+
+        .settings-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        .setting-card {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+        }
+        @media (min-width: 600px) {
+            .setting-card {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+        .setting-card label {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .setting-card .setting-description {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: -5px;
+            margin-bottom: 5px;
+        }
+        @media (min-width: 600px) {
+            .setting-card .setting-description {
+                margin-bottom: 0;
+            }
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            flex-shrink: 0; 
+        }
+        @media (min-width: 600px) {
+            .input-container {
+                width: auto;
+            }
+        }
+        .input-container .styled-input, 
+        .input-container .styled-select {
+            flex-grow: 1;
+            min-width: 120px;
+        }
+        .save-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            background: var(--accent);
+            color: var(--darker);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0; 
+        }
+        .save-btn:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        #toast-notification {
+            position: fixed;
+            bottom: -100px; /* Start off-screen */
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--secondary);
+            color: var(--darker);
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            z-index: 2000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            transition: bottom 0.5s ease;
+        }
+        #toast-notification.show {
+            bottom: 90px; /* Slide in */
+        }
+
+        .about-card {
+            padding: 20px;
+        }
+        .about-card p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .about-card a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .about-card a:hover {
+            text-decoration: underline;
+        }
+        .about-card .card-title {
+            margin-bottom: 20px;
+        }
+
+
+    </style>
+</head>
+<body>
+
+    <main>
+        
+        <!-- === HOME PAGE === --><div id="page-home" class="page-content active">
+            <div class="container">
+                <div class="live-info">
+                    <div class="live-item"> <i class="fas fa-clock live-icon"></i> <div id="current-time">--:--:--</div> </div>
+                    <div class="live-item"> <i class="fas fa-calendar-day live-icon"></i> <div id="current-date">--</div> </div>
+                    <div class="live-item"> <i class="fas fa-sun live-icon"></i> <div id="sunrise-time">--:--</div> </div>
+                    <div class="live-item"> <i class="fas fa-moon live-icon"></i> <div id="sunset-time">--:--</div> </div>
+                </div>
+                
+                <header>
+                    <div class="logo">☀️</div>
+                    <h1>Solar Power Generation Forecast</h1>
+                    <p class="subtitle">Enter your location and panel capacity to predict today's solar energy production</p>
+                </header>
+                
+                <div class="search-toggle">
+                    <button class="toggle-btn active" id="city-btn">By City</button>
+                    <button class="toggle-btn" id="coords-btn">By Coordinates</button>
+                </div>
+                
+                <form id="city-form">
+                    <div id="city-search-container">
+                        <div class="input-group">
+                            <label for="city-input">City Name</label>
+                            <input type="text" id="city-input" class="styled-input" placeholder="e.g., Rajapalayam" required>
+                        </div>
+                    </div>
+                    <div id="coords-search-container" class="hidden">
+                        <div class="input-group">
+                            <label for="lat-input">Latitude</label>
+                            <input type="number" id="lat-input" class="styled-input" step="any" placeholder="e.g., 9.47">
+                        </div>
+                        <div class="input-group">
+                            <label for="lon-input">Longitude</label>
+                            <input type="number" id="lon-input" class="styled-input" step="any" placeholder="e.g., 77.55">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="capacity-input">System Capacity (kW)</label>
+                        <input type="number" id="capacity-input" class="styled-input" value="5.0" step="0.1" min="0.1" required>
+                    </div>
+                    <button type="submit">
+                        <i class="fas fa-bolt"></i> Forecast
+                    </button>
+                </form>
+                
+                <div id="error-message" class="hidden">
+                    <i class="fas fa-exclamation-triangle error-icon"></i>
+                    <span id="error-text"></span>
+                </div>
+                
+                <div id="loader" class="hidden">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Analyzing weather and predicting generation...</div>
+                </div>
+                
+                <div id="results-container" class="hidden">
+                    <div class="card fade-in">
+                        <div class="card-header"> <i class="fas fa-cloud-sun card-icon"></i> <h2 class="card-title" id="current-weather-city">Current Weather</h2> </div>
+                        <div class="current-weather">
+                            <div class="weather-main">
+                                <div>
+                                    <div class="weather-temp" id="current-temp">--°C</div>
+                                    <div class="weather-desc" id="current-weather-main">--</div>
+                                </div>
+                                <div id="weather-icon" style="font-size: 2.5rem;">☀️</div>
+                            </div>
+                            <div class="weather-details">
+                                <div class="weather-detail-item"> <i class="fas fa-wind"></i> <span>Wind:</span> <span class="weather-detail-value" id="wind-speed">-- km/h</span> </div>
+                                <div class="weather-detail-item"> <i class="fas fa-tint"></i> <span>Humidity:</span> <span class="weather-detail-value" id="current-humidity">--%</span> </div>
+                                <div class="weather-detail-item"> <i class="fas fa-temperature-low"></i> <span>Feels like:</span> <span class="weather-detail-value" id="feels-like">--°C</span> </div>
+                                <div class="weather-detail-item"> <i class="fas fa-eye"></i> <span>Visibility:</span> <span class="weather-detail-value" id="visibility">-- km</span> </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard">
+                        <div class="card fade-in">
+                            <div class="card-header"> <i class="fas fa-sun card-icon"></i> <h2 class="card-title" id="result-city">Solar Forecast</h2> </div>
+                            <div class="kwh-label">Total Estimated Generation</div>
+                            <div class="total-kwh"> <span id="total-kwh-value">--</span> kWh </div>
+                            <div class="stats">
+                                <div class="stat-item"> <div class="stat-value" id="peak-hour">--:--</div> <div class="stat-label">Peak Hour</div> </div>
+                                <div class="stat-item"> <div class="stat-value" id="peak-kwh">--</div> <div class="stat-label">Peak kWh</div> </div>
+                                <div class="stat-item"> <div class="stat-value" id="avg-kwh">--</div> <div class="stat-label">Avg. Prod. kWh</div> </div>
+                                <div class="stat-item"> <div class="stat-value" id="efficiency">--%</div> <div class="stat-label">Peak Efficiency</div> </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card fade-in">
+                            <div class="card-header"> <i class="fas fa-chart-bar card-icon"></i> <h2 class="card-title">Hourly Generation Forecast</h2> </div>
+                            <div class="chart-container"> <canvas id="prediction-chart"></canvas> </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card fade-in">
+                        <div class="card-header"> <i class="fas fa-info-circle card-icon"></i> <h2 class="card-title">Daily Summary</h2> </div>
+                        <div class="stats">
+                            <div class="stat-item"> <div class="stat-value" id="avg-temp">--°C</div> <div class="stat-label">Avg Temp</div> </div>
+                            <div class="stat-item"> <div class="stat-value" id="avg-cloud">--%</div> <div class="stat-label">Avg Cloud Cover</div> </div>
+                            <div class="stat-item"> <div class="stat-value" id="avg-radiation">-- W/m²</div> <div class="stat-label">Avg Solar Radiation</div> </div>
+                            <div class="stat-item"> <div class="stat-value" id="avg-humidity">--%</div> <div class="stat-label">Avg Humidity</div> </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === ANALYSIS PAGE === --><div id="page-analysis" class="page-content">
+            <div class="container">
+                <header>
+                    <h1>Long-Term Analysis</h1>
+                    <p class="subtitle">Estimated generation based on historical weather data for your location</p>
+                </header>
+
+                <div id="analysis-placeholder" class="card placeholder-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h2>No Analysis Data</h2>
+                    <p>Run a forecast on the Home page to see long-term analysis here.</p>
+                </div>
+
+                <div id="long-term-container" class="long-term-container hidden">
+                    
+                    <div class="card fade-in yearly-stats-card">
+                        <div class="card-header"> <i class="fas fa-calendar-check card-icon"></i> <h2 class="card-title">Yearly Summary</h2> </div>
+                        <div class="stats">
+                            <div class="stat-item">
+                                <div class="stat-value" id="yearly-total-kwh">--</div>
+                                <div class="stat-label">Total Annual kWh</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="yearly-avg-daily">--</div>
+                                <div class="stat-label">Avg. Daily kWh</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="yearly-best-month">--</div>
+                                <div class="stat-label-secondary" id="yearly-best-month-kwh">-- kWh</div>
+                                <div class="stat-label">Best Month</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="yearly-worst-month">--</div>
+                                <div class="stat-label-secondary" id="yearly-worst-month-kwh">-- kWh</div>
+                                <div class="stat-label">Worst Month</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card fade-in">
+                        <div class="card-header"> <i class="fas fa-calendar-week card-icon"></i> <h2 class="card-title">Weekly Generation Estimate</h2> </div>
+                        <div class="chart-container" style="height: 300px;"> <canvas id="weekly-chart"></canvas> </div>
+                    </div>
+                    <div class="card fade-in">
+                        <div class="card-header"> <i class="fas fa-calendar-alt card-icon"></i> <h2 class="card-title">Monthly Generation Estimate</h2> </div>
+                        <div class="chart-container" style="height: 300px;"> <canvas id="monthly-chart"></canvas> </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === HISTORY PAGE === --><div id="page-history" class="page-content">
+            <div class="container">
+                <header>
+                    <h1>History</h1>
+                    <p class="subtitle">View your past forecast requests</p>
+                    <button id="clear-history-btn" class="clear-history-btn hidden">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                </header>
+                
+                <div id="history-placeholder" class="card placeholder-card">
+                    <i class="fas fa-history"></i>
+                    <h2>No History</h2>
+                    <p>Run a forecast on the Home page to save it here.</p>
+                </div>
+                
+                <div id="history-list-container"></div>
+
+            </div>
+        </div>
+
+        <!-- === SETTINGS PAGE (NEW) === --><div id="page-settings" class="page-content">
+            <div class="container">
+                <header>
+                    <h1>Settings</h1>
+                    <p class="subtitle">Configure your application preferences</p>
+                </header>
+                
+                <div class="settings-list">
+                    
+                    <div class="card setting-card">
+                        <div>
+                            <label for="default-capacity-input">Default System Capacity</label>
+                            <p class="setting-description">Set the default kW value for the Home page.</p>
+                        </div>
+                        <div class="input-container">
+                            <input type="number" id="default-capacity-input" class="styled-input" step="0.1" min="0.1" placeholder="e.g., 5.0">
+                            <button id="save-capacity-btn" class="save-btn">Save</button>
+                        </div>
+                    </div>
+
+                    <div class="card setting-card">
+                        <div>
+                            <label for="theme-select">App Theme</label>
+                            <p class="setting-description">Override the automatic weather-based theme.</p>
+                        </div>
+                        <div class="input-container">
+                            <select id="theme-select" class="styled-select">
+                                <option value="auto">Auto (Weather-based)</option>
+                                <option value="default">Dark (Default)</option>
+                                <option value="sunny">Light (Sunny)</option>
+                                <option value="cloudy">Cloudy</option>
+                                <option value="rainy">Rainy</option>
+                                <option value="stormy">Stormy</option>
+                            </select>
+                            <button id="save-theme-btn" class="save-btn">Save</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header" style="margin-bottom: 5px;">
+                            <i class="fas fa-user-astronaut card-icon"></i>
+                            <h2 class="card-title">Advanced Settings</h2>
+                        </div>
+                        <div class="setting-card">
+                            <div>
+                                <label for="inverter-efficiency-input">Inverter Efficiency</label>
+                                <p class="setting-description">Standard efficiency is 95-98%.</p>
+                            </div>
+                            <div class="input-container">
+                                <input type="number" id="inverter-efficiency-input" class="styled-input" step="0.1" min="80" max="100" placeholder="e.g., 97">
+                                <button id="save-advanced-btn" class="save-btn">Save</button>
+                            </div>
+                        </div>
+                        <div class="setting-card">
+                            <div>
+                                <label for="system-age-input">System Age (Years)</label>
+                                <p class="setting-description">Accounts for panel degradation (0.5%/yr).</p>
+                            </div>
+                            <div class="input-container">
+                                <input type="number" id="system-age-input" class="styled-input" step="1" min="0" max="40" placeholder="e.g., 0">
+                                <button id="save-advanced-btn-2" class="save-btn">Save</button> 
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card about-card">
+                        <div class="card-header">
+                            <i class="fas fa-info-circle card-icon"></i>
+                            <h2 class="card-title">About This App</h2>
+                        </div>
+                        <p>
+                            This forecasting tool uses an XGBoost machine learning model trained on historical solar and weather data.
+                            Live weather and historical data is provided by <a href="https://open-meteo.com/" target="_blank">Open-Meteo</a>.
+                        </p>
+                        <p>Model: <strong>solar_model.json</strong> (Normalized kWp)</p>
+                    </div>
+
+
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <div id="toast-notification">Settings Saved!</div>
+
+    <nav class="bottom-nav">
+        <button class="nav-btn active" data-target="page-home">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </button>
+        <button id="analysis-nav-btn" class="nav-btn" data-target="page-analysis">
+            <i class="fas fa-chart-line"></i>
+            <span>Analysis</span>
+            <span class="nav-badge hidden"></span>
+        </button>
+        <button class="nav-btn" data-target="page-history">
+            <i class="fas fa-history"></i>
+            <span>History</span>
+        </button>
+        <button class="nav-btn" data-target="page-settings">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </button>
+    </nav>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const allElements = {
+                form: document.getElementById('city-form'),
+                cityInput: document.getElementById('city-input'),
+                capacityInput: document.getElementById('capacity-input'),
+                resultsContainer: document.getElementById('results-container'),
+                loader: document.getElementById('loader'),
+                loadingText: document.querySelector('.loading-text'), 
+                errorMessage: document.getElementById('error-message'),
+                errorText: document.getElementById('error-text'),
+                currentTime: document.getElementById('current-time'),
+                currentDate: document.getElementById('current-date'),
+                sunriseTime: document.getElementById('sunrise-time'),
+                sunsetTime: document.getElementById('sunset-time'),
+                currentWeatherCity: document.getElementById('current-weather-city'),
+                currentTemp: document.getElementById('current-temp'),
+                currentWeatherMain: document.getElementById('current-weather-main'),
+                weatherIcon: document.getElementById('weather-icon'),
+                windSpeed: document.getElementById('wind-speed'),
+                currentHumidity: document.getElementById('current-humidity'),
+                feelsLike: document.getElementById('feels-like'),
+                visibility: document.getElementById('visibility'),
+                resultCity: document.getElementById('result-city'),
+                totalKwhValue: document.getElementById('total-kwh-value'),
+                chartCanvas: document.getElementById('prediction-chart'),
+                peakHour: document.getElementById('peak-hour'),
+                peakKwh: document.getElementById('peak-kwh'),
+                avgKwh: document.getElementById('avg-kwh'),
+                efficiency: document.getElementById('efficiency'),
+                avgTemp: document.getElementById('avg-temp'),
+                avgCloud: document.getElementById('avg-cloud'),
+                avgRadiation: document.getElementById('avg-radiation'),
+                avgHumidity: document.getElementById('avg-humidity'),
+                cityBtn: document.getElementById('city-btn'),
+                coordsBtn: document.getElementById('coords-btn'),
+                citySearchContainer: document.getElementById('city-search-container'),
+                coordsSearchContainer: document.getElementById('coords-search-container'),
+                latInput: document.getElementById('lat-input'),
+                lonInput: document.getElementById('lon-input'),
+                
+                longTermContainer: document.getElementById('long-term-container'),
+                weeklyChartCanvas: document.getElementById('weekly-chart'),
+                monthlyChartCanvas: document.getElementById('monthly-chart'),
+                analysisPlaceholder: document.getElementById('analysis-placeholder'),
+
+                yearlyTotalKwh: document.getElementById('yearly-total-kwh'),
+                yearlyAvgDaily: document.getElementById('yearly-avg-daily'),
+                yearlyBestMonth: document.getElementById('yearly-best-month'),
+                yearlyWorstMonth: document.getElementById('yearly-worst-month'),
+                yearlyBestMonthKwh: document.getElementById('yearly-best-month-kwh'),
+                yearlyWorstMonthKwh: document.getElementById('yearly-worst-month-kwh'),
+
+                navButtons: document.querySelectorAll('.nav-btn'),
+                pages: document.querySelectorAll('.page-content'),
+                analysisBadge: document.querySelector('#analysis-nav-btn .nav-badge'),
+
+                historyPlaceholder: document.getElementById('history-placeholder'),
+                historyListContainer: document.getElementById('history-list-container'),
+                clearHistoryBtn: document.getElementById('clear-history-btn'),
+
+                defaultCapacityInput: document.getElementById('default-capacity-input'),
+                saveCapacityBtn: document.getElementById('save-capacity-btn'),
+                themeSelect: document.getElementById('theme-select'),
+                saveThemeBtn: document.getElementById('save-theme-btn'),
+                toastNotification: document.getElementById('toast-notification'),
+
+                inverterEfficiencyInput: document.getElementById('inverter-efficiency-input'),
+                systemAgeInput: document.getElementById('system-age-input'),
+                saveAdvancedBtn: document.getElementById('save-advanced-btn'),
+                saveAdvancedBtn2: document.getElementById('save-advanced-btn-2'),
+
+            };
+            
+            let predictionChart = null;
+            let weeklyChart = null;  
+            let monthlyChart = null; 
+            let searchMode = 'city';
+            let lastRequestBody = null; 
+
+            let storedLongTermData = null;
+            let longTermChartsCreated = false;
+
+            const SETTINGS_KEY = 'solarAppSettings';
+
+            function setupNavigation() {
+                allElements.navButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const targetId = button.dataset.target;
+                        
+                        allElements.pages.forEach(page => {
+                            page.classList.toggle('active', page.id === targetId);
+                        });
+
+                        allElements.navButtons.forEach(btn => {
+                            btn.classList.toggle('active', btn.dataset.target === targetId);
+                        });
+
+                        if (targetId === 'page-analysis') {
+                            allElements.analysisBadge.classList.add('hidden');
+                            if (storedLongTermData && !longTermChartsCreated) {
+                                displayLongTermResults(storedLongTermData);
+                            }
+                        } else if (targetId === 'page-history') {
+                            renderHistoryPage(); 
+                        }
+                        
+                        window.scrollTo(0, 0);
+                    });
+                });
+            }
+
+            function showToast(message) {
+                allElements.toastNotification.textContent = message;
+                allElements.toastNotification.classList.add('show');
+                setTimeout(() => {
+                    allElements.toastNotification.classList.remove('show');
+                }, 2500);
+            }
+
+            function applyTheme(themeValue) {
+                if (themeValue && themeValue !== 'auto') {
+                    document.body.className = `theme-${themeValue}`;
+                } else {
+                    document.body.className = ''; 
+                }
+            }
+
+            function getSettings() {
+                try {
+                    return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
+                } catch (e) {
+                    return {};
+                }
+            }
+
+            function saveSettings(newSetting) {
+                try {
+                    let settings = getSettings();
+                    Object.assign(settings, newSetting); // Merge new setting
+                    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+                    showToast("Settings Saved!");
+                } catch (e) {
+                    console.error("Failed to save settings:", e);
+                    showToast("Error saving settings.");
+                }
+            }
+
+            function loadSettings() {
+                try {
+                    let settings = getSettings();
+                    
+                    if (settings.defaultCapacity) {
+                        allElements.capacityInput.value = settings.defaultCapacity; 
+                        allElements.defaultCapacityInput.value = settings.defaultCapacity; 
+                    }
+                    
+                    if (settings.themeOverride) {
+                        allElements.themeSelect.value = settings.themeOverride;
+                        applyTheme(settings.themeOverride);
+                    } else {
+                        allElements.themeSelect.value = 'auto';
+                    }
+
+                    if (settings.inverterEfficiency) {
+                        allElements.inverterEfficiencyInput.value = settings.inverterEfficiency;
+                    } else {
+                        allElements.inverterEfficiencyInput.value = 97; // Default
+                    }
+
+                    if (settings.systemAge) {
+                        allElements.systemAgeInput.value = settings.systemAge;
+                    } else {
+                        allElements.systemAgeInput.value = 0; // Default
+                    }
+
+                } catch (e) {
+                    console.error("Failed to load settings:", e);
+                    localStorage.removeItem(SETTINGS_KEY); // Clear corrupted settings
+                }
+            }
+            
+            allElements.saveCapacityBtn.addEventListener('click', () => {
+                const capacity = allElements.defaultCapacityInput.value;
+                if (capacity && parseFloat(capacity) > 0) {
+                    saveSettings({ defaultCapacity: capacity });
+                    allElements.capacityInput.value = capacity; 
+                } else {
+                    showToast("Invalid capacity value.");
+                }
+            });
+
+            allElements.saveThemeBtn.addEventListener('click', () => {
+                const theme = allElements.themeSelect.value;
+                saveSettings({ themeOverride: theme });
+                applyTheme(theme);
+                if (theme === 'auto' && allElements.resultsContainer.classList.contains('hidden') === false) {
+                     document.body.className = ''; 
+                     showToast("Theme set to Auto. It will update on next forecast.");
+                }
+            });
+
+            function saveAdvancedSettings() {
+                const efficiency = allElements.inverterEfficiencyInput.value;
+                const age = allElements.systemAgeInput.value;
+                
+                if (!efficiency || parseFloat(efficiency) <= 0 || parseFloat(efficiency) > 100) {
+                    showToast("Invalid efficiency (must be 1-100).");
+                    return;
+                }
+                if (age === "" || parseInt(age) < 0 || parseInt(age) > 50) {
+                    showToast("Invalid system age (must be 0-50).");
+                    return;
+                }
+
+                saveSettings({
+                    inverterEfficiency: parseFloat(efficiency),
+                    systemAge: parseInt(age)
+                });
+            }
+            allElements.saveAdvancedBtn.addEventListener('click', saveAdvancedSettings);
+            allElements.saveAdvancedBtn2.addEventListener('click', saveAdvancedSettings);
+
+
+            setupNavigation();
+            loadSettings(); 
+
+            allElements.clearHistoryBtn.addEventListener('click', () => {
+                const confirmed = confirm("Are you sure you want to clear all forecast history?");
+                if (confirmed) {
+                    localStorage.removeItem('solarHistory');
+                    renderHistoryPage();
+                }
+            });
+
+            allElements.cityBtn.addEventListener('click', () => {
+                searchMode = 'city';
+                allElements.cityBtn.classList.add('active');
+                allElements.coordsBtn.classList.remove('active');
+                allElements.citySearchContainer.classList.remove('hidden');
+                allElements.coordsSearchContainer.classList.add('hidden');
+                allElements.cityInput.required = true;
+                allElements.latInput.required = false;
+                allElements.lonInput.required = false;
+            });
+            
+            allElements.coordsBtn.addEventListener('click', () => {
+                searchMode = 'coords';
+                allElements.coordsBtn.classList.add('active');
+                allElements.cityBtn.classList.remove('active');
+                allElements.coordsSearchContainer.classList.remove('hidden');
+                allElements.citySearchContainer.classList.add('hidden');
+                allElements.latInput.required = true;
+                allElements.lonInput.required = true;
+                allElements.cityInput.required = false;
+            });
+
+            function updateDateTime() {
+                const now = new Date();
+                allElements.currentTime.textContent = now.toLocaleTimeString('en-US');
+                allElements.currentDate.textContent = now.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+            }
+            
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+
+            allElements.form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const settings = getSettings();
+
+                let requestBody = { 
+                    capacity: allElements.capacityInput.value.trim(),
+                    inverterEfficiency: settings.inverterEfficiency || 97, // Send advanced settings
+                    systemAge: settings.systemAge || 0
+                };
+                
+                if (searchMode === 'city') {
+                    const city = allElements.cityInput.value.trim();
+                    if (!city) return;
+                    requestBody.city = city;
+                } else {
+                    const lat = allElements.latInput.value.trim();
+                    const lon = allElements.lonInput.value.trim();
+                    if (!lat || !lon) return;
+                    requestBody.latitude = lat;
+                    requestBody.longitude = lon;
+                }
+                
+                lastRequestBody = requestBody; 
+                
+                allElements.resultsContainer.classList.add('hidden');
+                allElements.analysisBadge.classList.add('hidden'); 
+                allElements.errorMessage.classList.add('hidden');
+                allElements.analysisPlaceholder.classList.remove('hidden');
+                allElements.longTermContainer.classList.add('hidden');
+                storedLongTermData = null;
+                longTermChartsCreated = false;
+                if (weeklyChart) weeklyChart.destroy();
+                if (monthlyChart) monthlyChart.destroy();
+
+                allElements.loadingText.textContent = 'Analyzing weather and predicting generation...';
+                allElements.loader.classList.remove('hidden');
+
+                try {
+                    const dailyResponse = await fetch('/predict', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody)
+                    });
+                    
+                    const dailyResult = await dailyResponse.json();
+                    
+                    if (!dailyResponse.ok) {
+                        throw new Error(dailyResult.error || 'An unknown error occurred.');
+                    }
+                    
+                    displayResults(dailyResult);
+                    saveToHistory(dailyResult); 
+
+                    allElements.loadingText.textContent = 'Fetching long-term estimates...'; 
+
+                    const longTermResponse = await fetch('/long_term_predict', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    const longTermResult = await longTermResponse.json();
+
+                    if (!longTermResponse.ok) {
+                        console.error('Long-term forecast failed:', longTermResult.error);
+                    } else {
+                        storedLongTermData = longTermResult; 
+                        allElements.analysisBadge.classList.remove('hidden');
+                    }
+
+                } catch (error) {
+                    allElements.errorText.textContent = error.message;
+                    allElements.errorMessage.classList.remove('hidden');
+                } finally {
+                    allElements.loader.classList.add('hidden'); 
+                    allElements.loadingText.textContent = 'Analyzing weather and predicting generation...'; 
+                }
+            });
+            
+            function saveToHistory(data) {
+                try {
+                    const history = getSettings().history || []; 
+                    
+                    const newItem = {
+                        id: new Date().toISOString(), 
+                        city: data.city,
+                        total: data.total,
+                        capacity: lastRequestBody.capacity, 
+                        date: new Date().toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    };
+
+                    history.unshift(newItem);
+                    
+                    if (history.length > 20) {
+                        history.pop();
+                    }
+
+                    saveSettings({ history: history }); 
+                } catch (e) {
+                    console.error("Failed to save history to localStorage", e);
+                }
+            }
+
+            function renderHistoryPage() {
+                const history = getSettings().history || []; 
+                const listContainer = allElements.historyListContainer;
+                listContainer.innerHTML = ''; 
+
+                if (history.length === 0) {
+                    allElements.historyPlaceholder.classList.remove('hidden');
+                    allElements.clearHistoryBtn.classList.add('hidden');
+                } else {
+                    allElements.historyPlaceholder.classList.add('hidden');
+                    allElements.clearHistoryBtn.classList.remove('hidden');
+                    
+                    history.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'card history-item-card fade-in';
+                        
+                        card.innerHTML = `
+                            <div class="history-item-info">
+                                <h3>${item.city}</h3>
+                                <p>${item.date}</p>
+                                <p>${item.capacity} kW System</p>
+                            </div>
+                            <div class="history-item-kwh">
+                                ${item.total} <span>kWh</span>
+                            </div>
+                        `;
+                        listContainer.appendChild(card);
+                    });
+                }
+            }
+            
+            allElements.clearHistoryBtn.addEventListener('click', () => {
+                const confirmed = confirm("Are you sure you want to clear all forecast history?");
+                if (confirmed) {
+                    saveSettings({ history: [] }); 
+                    renderHistoryPage();
+                }
+            });
+            
+            renderHistoryPage();
+
+            function displayResults(data) {
+                let settings = getSettings();
+                if (!settings.themeOverride || settings.themeOverride === 'auto') {
+                    document.body.className = `theme-${data.theme}`;
+                }
+                
+                allElements.sunriseTime.textContent = data.daily_info.sunrise;
+                allElements.sunsetTime.textContent = data.daily_info.sunset;
+                allElements.currentWeatherCity.textContent = `Current Weather in ${data.city}`;
+                
+                if (data.current_weather && data.current_weather.description) {
+                    const descParts = data.current_weather.description.split(' ');
+                    const icon = descParts.pop();
+                    const text = descParts.join(' ');
+                    allElements.weatherIcon.textContent = icon;
+                    allElements.currentWeatherMain.textContent = text;
+                }
+                
+                allElements.currentTemp.textContent = `${data.current_weather.temperature}°C`;
+                allElements.windSpeed.textContent = `${data.current_weather.windspeed} km/h`;
+                allElements.currentHumidity.textContent = `${data.current_weather.humidity}%`;
+                allElements.feelsLike.textContent = `${data.current_weather.feels_like}°C`;
+                allElements.visibility.textContent = `${data.current_weather.visibility} km`;
+                allElements.resultCity.textContent = `Solar Forecast for ${data.city}`;
+                allElements.totalKwhValue.textContent = data.total;
+                allElements.peakHour.textContent = data.stats.peak_hour;
+                allElements.peakKwh.textContent = `${data.stats.peak_kwh} kWh`;
+                allElements.avgKwh.textContent = `${data.stats.avg_kwh} kWh`;
+                allElements.efficiency.textContent = `${data.stats.efficiency}%`;
+                allElements.avgTemp.textContent = `${data.daily_info.avg_temp}°C`;
+                allElements.avgCloud.textContent = `${data.daily_info.avg_cloud}%`;
+                allElements.avgRadiation.textContent = `${data.daily_info.avg_radiation} W/m²`;
+                allElements.avgHumidity.textContent = `${data.daily_info.avg_humidity}%`;
+                
+                createChart(data.labels, data.data);
+                
+                allElements.resultsContainer.classList.add('fade-in');
+                allElements.resultsContainer.classList.remove('hidden');
+            }
+
+            // --- CHART COLOR FIX ---
+            function createChart(labels, values) {
+                if (predictionChart) {
+                    predictionChart.destroy();
+                }
+                
+                const style = getComputedStyle(document.body);
+                const textColor = style.getPropertyValue('--text-color');
+                const mutedColor = style.getPropertyValue('--text-muted');
+                const gridColor = style.getPropertyValue('--border-color');
+                const cardBg = style.getPropertyValue('--card-bg');
+
+                const ctx = allElements.chartCanvas.getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(255, 209, 102, 0.6)'); 
+                gradient.addColorStop(1, 'rgba(255, 209, 102, 0.1)');
+                
+                predictionChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Predicted kWh',
+                            data: values,
+                            backgroundColor: gradient,
+                            borderColor: 'rgba(255, 209, 102, 1)',
+                            borderWidth: 2,
+                            borderRadius: 5,
+                            fill: true,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: mutedColor }, title: { display: true, text: 'kWh', color: mutedColor } },
+                            x: { grid: { color: gridColor }, ticks: { color: mutedColor }, title: { display: true, text: 'Hour of the Day', color: mutedColor } }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { backgroundColor: cardBg, titleColor: textColor, bodyColor: textColor, borderColor: 'rgba(255, 209, 102, 0.5)', borderWidth: 1 }
+                        }
+                    }
+                });
+            }
+
+            function displayLongTermResults(data) {
+                allElements.analysisPlaceholder.classList.add('hidden');
+                allElements.longTermContainer.classList.remove('hidden');
+
+                const totals = data.yearly_totals;
+                allElements.yearlyTotalKwh.textContent = `${totals.total_kwh} kWh`;
+                allElements.yearlyAvgDaily.textContent = `${totals.avg_daily_kwh.toFixed(2)} kWh`; /* FIX: Round to 2 decimal places */
+                
+                allElements.yearlyBestMonth.textContent = totals.best_month;
+                allElements.yearlyBestMonthKwh.textContent = `${totals.best_month_kwh.toFixed(2)} kWh`; /* FIX: Round to 2 decimal places */
+                allElements.yearlyWorstMonth.textContent = totals.worst_month;
+                allElements.yearlyWorstMonthKwh.textContent = `${totals.worst_month_kwh.toFixed(2)} kWh`; /* FIX: Round to 2 decimal places */
+
+                createWeeklyChart(data.weekly_prediction.labels, data.weekly_prediction.data);
+                createMonthlyChart(data.monthly_prediction.labels, data.monthly_prediction.data);
+                
+                longTermChartsCreated = true;
+            }
+
+            // --- CHART COLOR FIX ---
+            function createWeeklyChart(labels, values) {
+                if (weeklyChart) {
+                    weeklyChart.destroy();
+                }
+
+                const style = getComputedStyle(document.body);
+                const textColor = style.getPropertyValue('--text-color');
+                const mutedColor = style.getPropertyValue('--text-muted');
+                const gridColor = style.getPropertyValue('--border-color');
+                const cardBg = style.getPropertyValue('--card-bg');
+
+                const ctx = allElements.weeklyChartCanvas.getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(17, 138, 178, 0.6)'); 
+                gradient.addColorStop(1, 'rgba(17, 138, 178, 0.1)');
+
+                weeklyChart = new Chart(ctx, {
+                    type: 'line', 
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Predicted kWh',
+                            data: values,
+                            backgroundColor: gradient,
+                            borderColor: 'rgba(17, 138, 178, 1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.1,
+                            pointBackgroundColor: 'rgba(17, 138, 178, 1)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: mutedColor }, title: { display: true, text: 'Total kWh per Week', color: mutedColor } },
+                            x: { grid: { display: false }, ticks: { color: mutedColor, maxTicksLimit: 6 }, title: { display: true, text: 'Week Ending', color: mutedColor } }
+                        },
+                        plugins: { 
+                            legend: { display: false }, 
+                            tooltip: { backgroundColor: cardBg, titleColor: textColor, bodyColor: textColor, borderColor: 'rgba(17, 138, 178, 0.5)', borderWidth: 1 } 
+                        }
+                    }
+                });
+            }
+
+            // --- CHART COLOR FIX ---
+            function createMonthlyChart(labels, values) {
+                if (monthlyChart) {
+                    monthlyChart.destroy();
+                }
+
+                const style = getComputedStyle(document.body);
+                const textColor = style.getPropertyValue('--text-color');
+                const mutedColor = style.getPropertyValue('--text-muted');
+                const gridColor = style.getPropertyValue('--border-color');
+                const cardBg = style.getPropertyValue('--card-bg');
+
+                const ctx = allElements.monthlyChartCanvas.getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(6, 214, 160, 0.6)'); 
+                gradient.addColorStop(1, 'rgba(6, 214, 160, 0.1)');
+
+                monthlyChart = new Chart(ctx, {
+                    type: 'bar', 
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Predicted kWh',
+                            data: values,
+                            backgroundColor: gradient,
+                            borderColor: 'rgba(6, 214, 160, 1)',
+                            borderWidth: 2,
+                            borderRadius: 5,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: mutedColor }, title: { display: true, text: 'Total kWh per Month', color: mutedColor } },
+                            x: { grid: { display: false }, ticks: { color: mutedColor }, title: { display: true, text: 'Month', color: mutedColor } }
+                        },
+                        plugins: { 
+                            legend: { display: false }, 
+                            tooltip: { backgroundColor: cardBg, titleColor: textColor, bodyColor: textColor, borderColor: 'rgba(6, 214, 160, 0.5)', borderWidth: 1 } 
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+    
+</body>
+</html>
+

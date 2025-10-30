@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Power Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 20px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            color: #7f8c8d;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            color: #555;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: #f9f9f9;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.1em;
+            color: #34495e;
+            font-weight: 400;
+        }
+
+        .card p {
+            font-size: 2.2em;
+            font-weight: 700;
+            margin: 10px 0 0;
+            color: #f39c12;
+        }
+
+        .weather-card .weather-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .weather-card #current-temp {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #3498db; /* A nice blue for temperature */
+        }
+
+        .weather-card #current-condition {
+            font-size: 1.2em;
+            color: #555;
+        }
+
+        .chart-container {
+            padding: 20px;
+            background: #fdfdfd;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 30px;
+        }
+
+        .suggestions {
+            background-color: #eaf5ff;
+            border-left: 5px solid #3498db;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .suggestions h3 {
+            margin-top: 0;
+            color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>☀️ Solar & Weather Dashboard</h1>
+            <p>Today's Forecast for Rajapalayam, Tamil Nadu</p>
+        </header>
+
+        <main>
+            <div id="loading">Loading prediction data...</div>
+            <div id="dashboard" class="hidden">
+                <div class="cards">
+                    <div class="card weather-card">
+                        <h2>Live Weather</h2>
+                        <div class="weather-info">
+                            <span id="current-temp">--</span>
+                            <span id="current-condition">--</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>Total Generation</h2>
+                        <p><span id="total-kwh">--</span> kWh</p>
+                    </div>
+                    <div class="card">
+                        <h2>Day Type</h2>
+                        <p id="day-type">--</p>
+                    </div>
+                    <div class="card">
+                        <h2>Solar Prime Time</h2>
+                        <p id="peak-time">--</p>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="predictionChart"></canvas>
+                </div>
+
+                <div class="suggestions">
+                    <h3>💡 Power Usage Recommendation</h3>
+                    <p id="recommendation">--</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Helper function to translate WMO weather codes to text and emoji
+        function getWeatherDescription(code) {
+            const descriptions = {
+                0: "Clear sky ☀️", 1: "Mainly clear 🌤️", 2: "Partly cloudy 🌥️", 3: "Overcast ☁️",
+                45: "Fog 🌫️", 48: "Depositing rime fog 🌫️",
+                51: "Light drizzle 💧", 53: "Moderate drizzle 💧", 55: "Dense drizzle 💧",
+                61: "Slight rain 🌧️", 63: "Moderate rain 🌧️", 65: "Heavy rain 🌧️",
+                80: "Slight rain showers 🌦️", 81: "Moderate rain showers 🌦️", 82: "Violent rain showers 🌦️",
+                95: "Thunderstorm ⛈️",
+                // Add Google's iconCode mappings
+                1000: "Clear ☀️", 1001: "Cloudy ☁️", 1100: "Mostly Clear 🌤️", 1101: "Partly Cloudy 🌥️",
+                1102: "Mostly Cloudy ☁️", 2000: "Fog 🌫️", 2100: "Light Fog 🌫️",
+                4000: "Drizzle 💧", 4001: "Rain 🌧️", 4200: "Light Rain 🌧️", 4201: "Heavy Rain 🌧️",
+                8000: "Thunderstorm ⛈️"
+            };
+            return descriptions[code] || "Unknown";
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingDiv = document.getElementById('loading');
+            const dashboardDiv = document.getElementById('dashboard');
+            
+            fetch('/api/prediction')
+                .then(response => response.json())
+                .then(data => {
+                    // Check if the backend sent an error
+                    if (data.error) {
+                        loadingDiv.textContent = `Error: ${data.error}`;
+                        console.error('Backend Error:', data.error);
+                        return;
+                    }
+                    
+                    loadingDiv.style.display = 'none';
+                    dashboardDiv.classList.remove('hidden');
+                    
+                    // Update solar prediction cards
+                    document.getElementById('total-kwh').textContent = data.total_kwh;
+                    document.getElementById('day-type').textContent = data.suggestions.day_type;
+                    document.getElementById('peak-time').textContent = data.suggestions.peak_time;
+                    document.getElementById('recommendation').textContent = data.suggestions.recommendation;
+
+                    // Update live weather card
+                    const current = data.current_weather;
+                    document.getElementById('current-temp').textContent = `${Math.round(current.temperature)}°C`;
+                    document.getElementById('current-condition').textContent = getWeatherDescription(current.weathercode);
+
+                    // Create chart
+                    const labels = data.hourly_predictions.map(d => d.time);
+                    const kwhData = data.hourly_predictions.map(d => d.kwh);
+                    const ctx = document.getElementById('predictionChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar', data: { labels: labels, datasets: [{
+                            label: 'Predicted kWh', data: kwhData,
+                            backgroundColor: 'rgba(255, 206, 86, 0.6)',
+                            borderColor: 'rgba(255, 206, 86, 1)', borderWidth: 1
+                        }]}, options: { scales: { y: { beginAtZero: true, title: { display: true, text: 'Energy (kWh)' }}},
+                        plugins: { legend: { display: false }}}
+                    });
+                })
+                .catch(error => {
+                    loadingDiv.textContent = 'Error loading data. Could not connect to the backend. Is the python server running?';
+                    console.error('Network Error:', error);
+                });
+        });
+    </script>
+</body>
+</html>
